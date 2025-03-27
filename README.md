@@ -22,24 +22,27 @@ Implement a prototype job worker service that provides an API to run arbitrary p
 
 - CLI should be able to connect to worker service and start, stop, get status, and stream output of a process.
 
-# Implementation Plan  
+# Implementation Plan[WIP]
 
 ### **Server Side**  
-- [x] gRPC using Tonic  
-- [x] Asynchronous execution with Tokio  
-- [x] mTLS authentication with configurable cipher suites  
-- [x] Simple RBAC authorization  
-- [x] Resource management on Windows/Linux  
-- [x] Arbitrary binary execution  
-- [x] Streaming output  
+- [ ] gRPC using Tonic  
+- [ ] Asynchronous execution with Tokio  
+- [ ] mTLS authentication with configurable cipher suites
+    - [ ] private CA
+    - [ ] x509 certificate
+    - [ ] cipher suite
+- [ ] Simple RBAC authorization  
+- [ ] Resource management on Windows/Linux  
+- [ ] Arbitrary binary execution  
+- [ ] Streaming output  
 
 ### **Client Side**  
-- [x] CLI demo using Clap  
-- [x] mTLS authentication  
-- [x] Streaming job output  
+- [ ] CLI demo using Clap  
+- [ ] mTLS authentication  
+- [ ] Streaming job output  
 
 ### **Testing**  
-- [x] Mock testing with Tokio  
+- [ ] Mock testing with Tokio  
 
 ### **CI/CD**  
-- [x] Continuous Integration (CI) with GitHub Actions  
+- [ ] Continuous Integration with GitHub Actions  
