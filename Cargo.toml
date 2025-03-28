@@ -1,0 +1,31 @@
+[package]
+name = "easy_workflow_demo"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "server"
+path = "src/bin/server.rs"
+
+[[bin]]
+name = "client"
+path = "src/bin/client.rs"
+
+[dependencies]
+tonic = { version = "0.10", features = ["tls", "tls-roots"] }
+prost = "0.12"
+tokio = { version = "1.36", features = ["full", "macros", "rt-multi-thread"] }
+anyhow = "1.0"
+tracing = "0.1"
+tracing-subscriber = "0.3"
+x509-parser = "0.17.0"
+der-parser = "10.0.0"
+asn1-rs = "0.7.1"
+serde = { version = "1.0.219", features = ["derive"] }
+derive = "1.0.0"
+clap = { version = "4.5.34", features = ["derive"] }
+serde_json = "1.0.140"
+
+
+[build-dependencies]
+tonic-build = "0.10"

@@ -1,0 +1,42 @@
+syntax = "proto3";
+package demo;
+
+service WorkFlow {
+  rpc GetJobStatus (JobStatusRequest) returns (JobStatusResponse);
+}
+
+message ResponseHeader {
+  string code = 1;
+  string message = 2;
+}
+
+message Quota {
+  uint32 cpu = 1;
+  uint32 memory = 2;
+  uint32 io = 3;
+}
+
+message EnvironmentVariables {
+  string key = 1;
+  string value = 2;
+}
+
+message Entrypoint {
+  string cmd = 1;
+  repeated EnvironmentVariables envs = 2;
+}
+
+message JobStatusRequest {
+  Entrypoint entrypoint = 1;
+  Quota quota = 2;
+  uint32 timeout = 3;
+  uint32 retry_count = 4;
+  int32 priority = 5;
+  repeated string labels = 6;
+  repeated string annotations = 7;
+}
+
+message JobStatusResponse {
+  ResponseHeader header = 1;
+  string job_id = 2;
+}

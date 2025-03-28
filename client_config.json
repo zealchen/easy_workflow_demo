@@ -1,0 +1,5 @@
+{
+    "ca_crt": "certs/ca.crt",
+    "crt": "certs/client.crt",
+    "key": "certs/client.key"
+}
