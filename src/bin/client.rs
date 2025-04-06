@@ -169,7 +169,7 @@ impl TryFrom<String> for EnvironmentVariables {
     fn try_from(value: String) -> Result<Self> {
         let kv = value.split('=').collect::<Vec<_>>();
         if kv.len() != 2 {
-            Err(format!("invalid env input: {}", value.as_str()).into())
+            Err(anyhow::format_err!("invalid env input: {}", value.as_str()))
         } else {
             Ok(EnvironmentVariables {
                 key: kv[0].into(),
@@ -192,7 +192,7 @@ async fn handle_create(mut client: WorkFlowClient<Channel>, args: CreateArgs) ->
     {
         if can_parse_envs.is_err() {
             // how to return err, if can_parse_envs is_err
-            return Err("parse envs failed".into());
+            return Err(anyhow::format_err!("parse envs failed"));
         }
     }
     let envs = envs.into_iter().map(|e| e.unwrap()).collect::<Vec<_>>();

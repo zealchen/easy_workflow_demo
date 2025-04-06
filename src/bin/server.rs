@@ -1,4 +1,8 @@
 use easy_workflow_demo::Result;
+use metrics::{counter, gauge, histogram};
+use metrics_exporter_prometheus::{Matcher, PrometheusBuilder, PrometheusHandle};
+use rand::Rng;
+use std::net::SocketAddr;
 use tonic::{transport::Server, Request, Response, Status};
 use tracing::instrument;
 use tracing::{debug, info};
@@ -24,6 +28,17 @@ impl WorkFlow for WorkFlowService {
         &self,
         request: Request<JobStatusRequest>,
     ) -> std::result::Result<Response<JobStatusResponse>, Status> {
+        let c = counter!("create_job_count_total", "action" => "create", "method" => "POST");
+        c.increment(1);
+        let mut rng = rand::rng();
+        let random = rng.random_range(1..10);
+        let gauge = gauge!("active_jobs");
+        gauge.set(random);
+        let random2 = rng.random_range(1..100) as f32 / 100.0;
+        let histogram1 = histogram!("create_job_duration_seconds", 
+                  "action" => "create", "status" => if random % 2 == 0 { "error" } else { "success" });
+        histogram1.record(random2);
+
         // Extract client certificate
         let client_cert_info = match request.peer_certs() {
             Some(certs) => {
@@ -116,9 +131,28 @@ fn init_log() {
     }
 }
 
+fn setup_metrics_exporter() {
+    const EXPONENTIAL_SECONDS: &[f64] = &[
+        0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0,
+    ];
+
+    // Prometheus metrics server started on http://127.0.0.1:9091/metrics
+    PrometheusBuilder::new()
+        .with_http_listener(SocketAddr::from(([127, 0, 0, 1], 9091)))
+        .add_global_label("service", "my_awesome_service")
+        .set_buckets_for_metric(
+            Matcher::Full("create_job_duration_seconds".to_string()),
+            EXPONENTIAL_SECONDS,
+        )
+        .unwrap()
+        .install()
+        .expect("failed to install Prometheus recorder")
+}
+
 #[tokio::main]
 async fn main() -> Result<()> {
     init_log();
+    setup_metrics_exporter();
     // Load certificates and private key files
     let cert_path = "certs/server.crt";
     let key_path = "certs/server.key";
