@@ -1,5 +1,8 @@
-use std::error::Error;
+use easy_workflow_demo::Result;
 use tonic::{transport::Server, Request, Response, Status};
+use tracing::instrument;
+use tracing::{debug, info};
+use tracing_subscriber::{filter::LevelFilter, EnvFilter};
 
 // Import the generated proto code
 pub mod demo {
@@ -16,12 +19,11 @@ pub struct WorkFlowService {}
 
 #[tonic::async_trait]
 impl WorkFlow for WorkFlowService {
+    #[instrument(skip(self))]
     async fn get_job_status(
         &self,
         request: Request<JobStatusRequest>,
-    ) -> Result<Response<JobStatusResponse>, Status> {
-        println!("Got a request: {:?}", request.get_ref().entrypoint);
-
+    ) -> std::result::Result<Response<JobStatusResponse>, Status> {
         // Extract client certificate
         let client_cert_info = match request.peer_certs() {
             Some(certs) => {
@@ -69,8 +71,8 @@ impl WorkFlow for WorkFlowService {
         };
 
         let (client_cn, client_role) = client_cert_info;
-        println!("Client CN: {}", client_cn);
-        println!("Client Role: {}", client_role);
+        debug!("Client CN: {}", client_cn);
+        debug!("Client Role: {}", client_role);
 
         // Create response with certificate info
         let response = demo::JobStatusResponse {
@@ -85,8 +87,38 @@ impl WorkFlow for WorkFlowService {
     }
 }
 
+fn init_log() {
+    let varname = "LOG_LEVEL";
+    let env_filter = if let Ok(log_level) = std::env::var(varname) {
+        // Override to avoid simple logs to be spammed with tokio level informations
+        let log_level = match &log_level[..] {
+            "warn" => "server=warn,other=warn",
+            "info" => "server=info,other=info",
+            "debug" => "server=debug,other=debug",
+            log_level => log_level,
+        };
+        EnvFilter::builder()
+            .with_default_directive(LevelFilter::INFO.into())
+            .parse_lossy(log_level)
+    } else {
+        EnvFilter::new("info")
+    };
+    if true {
+        tracing_subscriber::fmt()
+            .with_env_filter(env_filter)
+            .json()
+            .init();
+    } else {
+        tracing_subscriber::fmt()
+            .with_env_filter(env_filter)
+            .compact()
+            .init();
+    }
+}
+
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn Error>> {
+async fn main() -> Result<()> {
+    init_log();
     // Load certificates and private key files
     let cert_path = "certs/server.crt";
     let key_path = "certs/server.key";
@@ -111,7 +143,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let addr = "127.0.0.1:50051".parse()?;
     let greeter = WorkFlowService::default();
 
-    println!("WorkFlowServer listening on {}", addr);
+    info!("WorkFlowServer listening on {}", addr);
 
     Server::builder()
         .tls_config(tls_config)?
